@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useViewportHeight } from '../hooks/useViewportHeight';
 import LoginModal from './LoginModal';
 import type { Message } from '../types';
 import 'highlight.js/styles/github-dark.css';
@@ -131,10 +132,30 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [selectedMood, setSelectedMood] = useState<MoodType>('default');
   const [moodDropdownOpen, setMoodDropdownOpen] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const moodDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+  const viewportHeight = useViewportHeight();
+
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+    // Scroll to input on mobile when keyboard appears
+    setTimeout(() => {
+      if (textareaRef.current && window.innerWidth < 768) {
+        textareaRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 300);
+  };
+
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
+  };
 
   const handleAuthAction = () => {
     if (isAuthenticated) {
@@ -186,6 +207,38 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
     }
   };
 
+  // Handle viewport height changes (keyboard showing/hiding)
+  useEffect(() => {
+    const updateChatAreaHeight = () => {
+      if (chatAreaRef.current) {
+        // Calculate available height more precisely
+        const windowHeight = window.visualViewport?.height || window.innerHeight;
+
+        // Get the App container padding (8px on mobile, 16px on larger screens)
+        const appPadding = window.innerWidth < 640 ? 16 : 32; // p-2 = 8px each side, p-4 = 16px each side
+
+        // Calculate the available height for the chat area
+        const availableHeight = windowHeight - appPadding;
+
+        // Set the height directly
+        chatAreaRef.current.style.height = `${availableHeight}px`;
+        chatAreaRef.current.style.maxHeight = `${availableHeight}px`;
+      }
+    };
+
+    updateChatAreaHeight();
+
+    // Listen for viewport changes
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateChatAreaHeight);
+      return () => {
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateChatAreaHeight);
+        }
+      };
+    }
+  }, [viewportHeight]);
+
   useEffect(() => {
     adjustTextareaHeight();
   }, [inputValue]);
@@ -213,7 +266,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-screen">
+    <div
+      ref={chatAreaRef}
+      className="flex flex-col overflow-hidden chat-container"
+      style={{ height: '100%', maxHeight: '100%' }}
+    >
       {/* Chat Header with Hamburger Menu and Sign In Button */}
       <div className="flex-shrink-0 p-3 sm:p-4 lg:p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -318,7 +375,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
             <div className="text-center">
               <FiMessageCircle className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 text-white/40" />
               <h3 className="text-base sm:text-lg font-medium text-white mb-2">
-                Welcome to AI Chatbot
+                Welcome to Knowhere
               </h3>
               <p className="text-sm sm:text-base text-white/60 mb-4">
                 {isAuthenticated
@@ -397,6 +454,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               placeholder="Type your message..."
               className="w-full px-3 py-2 sm:px-4 sm:py-2.5 glass-input text-sm sm:text-base text-white placeholder-white/50 resize-none rounded-full overflow-hidden flex items-center"
               rows={1}

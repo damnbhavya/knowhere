@@ -4,16 +4,21 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
+import { useViewportHeight } from './hooks/useViewportHeight';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const viewportHeight = useViewportHeight();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   return (
-    <div className="mobile-screen mobile-safe-area text-gray-900 dark:text-white overflow-hidden">
+    <div 
+      className="text-gray-900 dark:text-white overflow-hidden"
+      style={{ height: `${viewportHeight}px` }}
+    >
       <div className="flex h-full p-2 sm:p-4 gap-2 sm:gap-4">
         {/* Sidebar */}
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
