@@ -132,7 +132,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [selectedMood, setSelectedMood] = useState<MoodType>('default');
   const [moodDropdownOpen, setMoodDropdownOpen] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const moodDropdownRef = useRef<HTMLDivElement>(null);
@@ -141,7 +140,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   const viewportHeight = useViewportHeight();
 
   const handleInputFocus = () => {
-    setIsInputFocused(true);
     // Scroll to input on mobile when keyboard appears
     setTimeout(() => {
       if (textareaRef.current && window.innerWidth < 768) {
@@ -154,7 +152,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   };
 
   const handleInputBlur = () => {
-    setIsInputFocused(false);
+    // Input blur handler - can be used for cleanup if needed
   };
 
   const handleAuthAction = () => {
