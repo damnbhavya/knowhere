@@ -40,9 +40,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed left-4 top-4 bottom-4 w-80 glass-panel transform transition-transform duration-300 ease-in-out z-50 ${
+      <div className={`fixed left-2 sm:left-4 top-2 sm:top-4 bottom-2 sm:bottom-4 w-80 glass-panel transform transition-transform duration-300 ease-in-out z-50 ${
         isOpen ? 'translate-x-0' : '-translate-x-[110%]'
-      } lg:relative lg:translate-x-0 lg:left-0 lg:top-0 lg:bottom-0 flex flex-col`}>
+      } lg:relative lg:translate-x-0 lg:left-0 lg:top-0 lg:bottom-0 flex flex-col max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] lg:max-h-full`}>
 
         {/* Header */}
         <div className="flex items-center justify-end p-6 pb-2">

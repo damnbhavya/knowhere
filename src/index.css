@@ -10,16 +10,31 @@
     font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
+  /* Fix for mobile viewport height issues */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     @apply text-gray-900 dark:text-white transition-colors duration-200;
     background: linear-gradient(135deg, #1e3a8a 0%, #1f2937 50%, #000000 100%);
     background-attachment: fixed;
     min-height: 100vh;
+    /* Mobile-specific viewport height fixes */
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+    height: 100dvh;
   }
 
   body.dark {
     background: linear-gradient(135deg, #1e3a8a 0%, #1f2937 50%, #000000 100%);
     background-attachment: fixed;
+  }
+
+  /* Ensure the root element takes full height */
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 }
 
@@ -237,4 +252,33 @@
 .chat-message .prose ul li::marker,
 .chat-message .prose ol li::marker {
   @apply text-white/70;
+}
+
+/* Mobile viewport utilities */
+@supports (height: 100dvh) {
+  .mobile-screen {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+@supports not (height: 100dvh) {
+  .mobile-screen {
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Ensure proper scrolling behavior on mobile */
+@media screen and (max-width: 768px) {
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix iOS Safari viewport issues */
+  .mobile-safe-area {
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
 }

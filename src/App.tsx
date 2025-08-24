@@ -13,8 +13,8 @@ function AppContent() {
   };
 
   return (
-    <div className="h-screen text-gray-900 dark:text-white">
-      <div className="flex h-full p-4 gap-4">
+    <div className="mobile-screen mobile-safe-area text-gray-900 dark:text-white overflow-hidden">
+      <div className="flex h-full p-2 sm:p-4 gap-2 sm:gap-4">
         {/* Sidebar */}
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 

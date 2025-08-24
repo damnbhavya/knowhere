@@ -180,7 +180,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+      // Use smaller max height on mobile
+      const maxHeight = window.innerWidth < 640 ? 100 : 150;
+      textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + 'px';
     }
   };
 
@@ -211,9 +213,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-screen">
       {/* Chat Header with Hamburger Menu and Sign In Button */}
-      <div className="flex-shrink-0 p-4 sm:p-6 flex items-center justify-between">
+      <div className="flex-shrink-0 p-3 sm:p-4 lg:p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Mobile Hamburger Menu */}
           <button
@@ -224,7 +226,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
             <FiMenu className="w-5 h-5" />
           </button>
 
-          <h2 className="text-xl sm:text-2xl font-semibold text-white app-name">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white app-name">
             Knowhere
           </h2>
         </div>
@@ -310,22 +312,22 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 space-y-6 hide-scrollbar">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 space-y-4 sm:space-y-6 hide-scrollbar min-h-0">
         {!currentChat ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <FiMessageCircle className="w-16 h-16 mx-auto mb-4 text-white/40" />
-              <h3 className="text-lg font-medium text-white mb-2">
+              <FiMessageCircle className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 text-white/40" />
+              <h3 className="text-base sm:text-lg font-medium text-white mb-2">
                 Welcome to AI Chatbot
               </h3>
-              <p className="text-white/60 mb-4">
+              <p className="text-sm sm:text-base text-white/60 mb-4">
                 {isAuthenticated
                   ? "Start a new conversation or select an existing one from the sidebar"
                   : "Sign in to start chatting with our AI assistant and save your conversations"
                 }
               </p>
               {!isAuthenticated && (
-                <p className="text-white/40 text-sm">
+                <p className="text-white/40 text-xs sm:text-sm">
                   You can still send messages without signing in, but they won't be saved.
                 </p>
               )}
@@ -387,8 +389,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 p-6">
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
+      <div className="flex-shrink-0 p-3 sm:p-6">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 sm:gap-3">
           <div className="flex-1 relative flex items-center">
             <textarea
               ref={textareaRef}
@@ -396,11 +398,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="w-full px-3 py-1.5 sm:px-4 sm:py-2.5 glass-input text-sm sm:text-base text-white placeholder-white/50 resize-none rounded-full overflow-hidden flex items-center"
+              className="w-full px-3 py-2 sm:px-4 sm:py-2.5 glass-input text-sm sm:text-base text-white placeholder-white/50 resize-none rounded-full overflow-hidden flex items-center"
               rows={1}
               style={{
                 minHeight: '40px',
-                maxHeight: '120px',
+                maxHeight: '100px', // Reduced for mobile
                 lineHeight: '1.4',
                 display: 'flex',
                 alignItems: 'center'
