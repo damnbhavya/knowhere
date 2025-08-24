@@ -22,7 +22,7 @@ export const useViewportHeight = () => {
     // Listen for viewport changes
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateViewportHeight);
-      window.visualViewport.addEventListener('scroll', updateViewportHeight);
+      // Remove scroll listener as it can cause unwanted behavior
     } else {
       window.addEventListener('resize', updateViewportHeight);
     }
@@ -32,14 +32,8 @@ export const useViewportHeight = () => {
       setTimeout(updateViewportHeight, 100);
     });
 
-    // Listen for focus events that might trigger keyboard
-    window.addEventListener('focusin', () => {
-      setTimeout(updateViewportHeight, 300); // Delay to allow keyboard to appear
-    });
-
-    window.addEventListener('focusout', () => {
-      setTimeout(updateViewportHeight, 300); // Delay to allow keyboard to disappear
-    });
+    // Use more precise focus/blur detection
+    // Remove general focusin/focusout as they can be too aggressive
 
     // Initial measurement
     updateViewportHeight();
@@ -47,13 +41,10 @@ export const useViewportHeight = () => {
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateViewportHeight);
-        window.visualViewport.removeEventListener('scroll', updateViewportHeight);
       } else {
         window.removeEventListener('resize', updateViewportHeight);
       }
       window.removeEventListener('orientationchange', updateViewportHeight);
-      window.removeEventListener('focusin', updateViewportHeight);
-      window.removeEventListener('focusout', updateViewportHeight);
     };
   }, []);
 

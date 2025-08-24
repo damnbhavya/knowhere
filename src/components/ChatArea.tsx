@@ -140,15 +140,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   const viewportHeight = useViewportHeight();
 
   const handleInputFocus = () => {
-    // Scroll to input on mobile when keyboard appears
-    setTimeout(() => {
-      if (textareaRef.current && window.innerWidth < 768) {
-        textareaRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
-    }, 300);
+    // Prevent automatic scrolling - let the dynamic height adjustment handle positioning
+    // The ChatArea height will adjust automatically when keyboard appears
   };
 
   const handleInputBlur = () => {
@@ -209,6 +202,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   useEffect(() => {
     const updateChatAreaHeight = () => {
       if (chatAreaRef.current) {
+        // Store current scroll position to prevent unwanted scrolling
+        const currentScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
         // Calculate available height more precisely
         const windowHeight = window.visualViewport?.height || window.innerHeight;
 
@@ -218,9 +214,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
         // Calculate the available height for the chat area
         const availableHeight = windowHeight - appPadding;
 
-        // Set the height directly
+        // Set the height directly without triggering scroll
         chatAreaRef.current.style.height = `${availableHeight}px`;
         chatAreaRef.current.style.maxHeight = `${availableHeight}px`;
+
+        // Restore scroll position to prevent unwanted scrolling
+        if (currentScrollTop !== 0) {
+          window.scrollTo(0, currentScrollTop);
+        }
       }
     };
 
@@ -240,6 +241,25 @@ const ChatArea: React.FC<ChatAreaProps> = ({ onToggleSidebar }) => {
   useEffect(() => {
     adjustTextareaHeight();
   }, [inputValue]);
+
+  // Prevent page from scrolling on mobile
+  useEffect(() => {
+    const preventScroll = () => {
+      if (window.innerWidth < 768) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    // Reset scroll position
+    preventScroll();
+
+    // Listen for any scroll attempts and reset them
+    window.addEventListener('scroll', preventScroll, { passive: false });
+
+    return () => {
+      window.removeEventListener('scroll', preventScroll);
+    };
+  }, []);
 
   // Handle click outside dropdowns
   useEffect(() => {

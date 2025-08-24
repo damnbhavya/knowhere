@@ -15,7 +15,7 @@ function AppContent() {
   };
 
   return (
-    <div 
+    <div
       className="text-gray-900 dark:text-white overflow-hidden"
       style={{ height: `${viewportHeight}px` }}
     >
