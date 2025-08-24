@@ -141,14 +141,22 @@ class ApiService {
     }
 
     try {
-      const response = await this.request<AuthResponse>('/auth/refresh', {
+      const formData = new FormData();
+      formData.append('refresh_token', refreshToken);
+
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
         method: 'POST',
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        body: formData,
       });
 
-      this.accessToken = response.access_token;
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
+      if (!response.ok) {
+        throw new Error('Failed to refresh token');
+      }
+
+      const data = await response.json();
+      this.accessToken = data.access_token;
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
     } catch (error) {
       // Refresh failed, logout user
       this.logout();
