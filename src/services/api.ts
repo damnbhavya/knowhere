@@ -79,19 +79,32 @@ class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired, try to refresh
-          await this.refreshToken();
-          // Retry the request with new token
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${this.accessToken}`,
-          };
-          const retryResponse = await fetch(url, config);
-          if (!retryResponse.ok) {
-            throw new Error(`HTTP error! status: ${retryResponse.status}`);
+        if (response.status === 401 && this.accessToken) {
+          // Only try to refresh if we have an access token (user was logged in)
+          const refreshToken = localStorage.getItem('refresh_token');
+          if (refreshToken) {
+            try {
+              await this.refreshToken();
+              // Retry the request with new token
+              config.headers = {
+                ...config.headers,
+                Authorization: `Bearer ${this.accessToken}`,
+              };
+              const retryResponse = await fetch(url, config);
+              if (!retryResponse.ok) {
+                throw new Error(`HTTP error! status: ${retryResponse.status}`);
+              }
+              return retryResponse.json();
+            } catch (refreshError) {
+              // Refresh failed, logout and throw original error
+              this.logout();
+              throw new Error(`Authentication failed`);
+            }
+          } else {
+            // No refresh token, just logout and throw error
+            this.logout();
+            throw new Error(`Authentication required`);
           }
-          return retryResponse.json();
         }
 
         const errorData = await response.json().catch(() => ({}));

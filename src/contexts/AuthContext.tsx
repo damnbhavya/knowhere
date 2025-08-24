@@ -44,7 +44,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userData = await apiService.getCurrentUser();
       setUser(userData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+      let message = 'Login failed';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Backend server is not running')) {
+          message = 'Backend server is not running. Please start the backend server.';
+        } else if (err.message.includes('Authentication required')) {
+          message = 'Please check your credentials and try again.';
+        } else if (err.message.includes('Authentication failed')) {
+          message = 'Session expired. Please login again.';
+        } else {
+          message = err.message;
+        }
+      }
+      
       setError(message);
       throw err;
     } finally {
