@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Knowhere — AI Chatbot</title>
+    <meta name="description" content="Knowhere is a smart AI chatbot that can help with anything. Built by Bhavya Kataria." />
+    <meta property="og:title" content="Knowhere — AI Chatbot" />
+    <meta property="og:description" content="A smart AI chatbot powered by Gemini, with deep knowledge of Bhavya Kataria's portfolio." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://knowhere.bhavya.page" />
+  </head>
+  <body>
+    <script>
+      (function () {
+        var theme = localStorage.getItem('knowhere-theme');
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
