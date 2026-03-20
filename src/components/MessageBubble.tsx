@@ -96,6 +96,9 @@ function MessageBubbleInner({ content, isUser, timestamp, isStreaming }: Message
     );
   }
 
+  // check if this is a generated image message
+  const imageMatch = content.match(/^\[IMG\](data:[^[]+)\[\/IMG\]$/);
+
   return (
     <div className="flex px-4 py-2 group">
       <div className="flex flex-col max-w-[95%]">
@@ -103,10 +106,43 @@ function MessageBubbleInner({ content, isUser, timestamp, isStreaming }: Message
           className="liquid-glass-panel rounded-2xl rounded-bl-md px-4 py-2.5 text-foreground"
           style={glassStyles}
         >
+          {imageMatch ? (
+            <div>
+              <img
+                src={imageMatch[1]}
+                alt="Generated image"
+                className="rounded-xl max-w-full my-1"
+                style={{ maxHeight: '512px', objectFit: 'contain' }}
+              />
+              <button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = imageMatch[1];
+                  link.download = `knowhere-${Date.now()}.png`;
+                  link.click();
+                }}
+                className="text-xs text-foreground/30 hover:text-foreground/60 mt-1 transition-colors"
+              >
+                ↓ Download
+              </button>
+            </div>
+          ) : (
           <div className="markdown-body">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
+                img({ src, alt, ...props }) {
+                  return (
+                    <img
+                      src={src}
+                      alt={alt || 'Generated image'}
+                      className="rounded-xl max-w-full my-2"
+                      style={{ maxHeight: '512px', objectFit: 'contain' }}
+                      loading="lazy"
+                      {...props}
+                    />
+                  );
+                },
                 code({ className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
                   const code = String(children).replace(/\n$/, '');
@@ -139,6 +175,7 @@ function MessageBubbleInner({ content, isUser, timestamp, isStreaming }: Message
               {content}
             </ReactMarkdown>
           </div>
+          )}
           {isStreaming && (
             <span className="inline-flex items-center gap-0.5 ml-1">
               <span className="w-1.5 h-1.5 bg-primary rounded-full typing-dot" />

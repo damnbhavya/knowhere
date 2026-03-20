@@ -91,15 +91,21 @@ export function useChat() {
     );
   }, [messages, isStreaming, activeChatSessionId]);
 
+  const addMessage = useCallback((msg: Message) => {
+    setMessages(prev => [...prev, msg]);
+  }, []);
+
   return {
     messages,
     streamingContent,
     isStreaming,
     error,
     activeChatSessionId,
+    setActiveChatSessionId,
     loadMessages,
     sendMessage,
     clearChat,
     setError,
+    addMessage,
   };
 }

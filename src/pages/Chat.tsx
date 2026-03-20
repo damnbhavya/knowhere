@@ -1,4 +1,5 @@
 import { useCallback, useState, useMemo } from 'react';
+import { supabase, type Message } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
 import InputBar from '@/components/InputBar';
@@ -75,10 +76,11 @@ export default function Chat() {
   const { sessions, removeSession, renameSession, togglePin, fetchSessions } = useChatSessions();
   const {
     messages, streamingContent, isStreaming, error,
-    activeChatSessionId, loadMessages, sendMessage, clearChat, setError,
+    activeChatSessionId, setActiveChatSessionId, loadMessages, sendMessage, clearChat, setError, addMessage,
   } = useChat();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const handleSelectSession = useCallback(async (id: number) => {
     await loadMessages(id);
@@ -101,14 +103,102 @@ export default function Chat() {
     await togglePin(id);
   }, [togglePin]);
 
-  const handleSend = useCallback(async (content: string) => {
+  const handleSend = useCallback(async (content: string, imageMode?: boolean) => {
+    if (imageMode) {
+      handleImageGen(content);
+      return;
+    }
     await sendMessage(content, async () => {
-      // session was created server-side, refresh sidebar
       await fetchSessions();
     });
   }, [sendMessage, fetchSessions]);
 
-  const isEmptyState = messages.length === 0 && !isStreaming;
+  const handleImageGen = async (prompt: string) => {
+    setIsGeneratingImage(true);
+
+    const userMsg: Message = {
+      id: Date.now(),
+      chat_session_id: activeChatSessionId ?? 0,
+      user_id: '',
+      content: prompt,
+      is_user_message: true,
+      timestamp: new Date().toISOString(),
+    };
+    addMessage(userMsg);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Not authenticated');
+        setIsGeneratingImage(false);
+        return;
+      }
+
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        setError(data.error || 'Image generation failed');
+        setIsGeneratingImage(false);
+        return;
+      }
+
+      // store as data URI — works in DB and renders after refresh
+      const dataUri = `data:${data.mimeType || 'image/jpeg'};base64,${data.image}`;
+      const imageContent = `[IMG]${dataUri}[/IMG]`;
+
+      const aiMsg: Message = {
+        id: Date.now() + 1,
+        chat_session_id: activeChatSessionId ?? 0,
+        user_id: '',
+        content: imageContent,
+        is_user_message: false,
+        timestamp: new Date().toISOString(),
+      };
+      addMessage(aiMsg);
+      setIsGeneratingImage(false);
+
+      // persist to DB (runs in background, skeleton is already gone)
+      let sessionId = activeChatSessionId;
+      if (!sessionId) {
+        const title = `🎨 ${prompt.slice(0, 50)}`;
+        const { data: newSession } = await supabase
+          .from('chat_sessions')
+          .insert({ user_id: session.user.id, title })
+          .select()
+          .single();
+        if (newSession) {
+          sessionId = newSession.id;
+          setActiveChatSessionId(newSession.id);
+        }
+        await fetchSessions();
+      }
+
+      if (sessionId) {
+        await supabase.from('messages').insert([
+          { chat_session_id: sessionId, user_id: session.user.id, content: prompt, is_user_message: true },
+          { chat_session_id: sessionId, user_id: session.user.id, content: imageContent, is_user_message: false },
+        ]);
+        await supabase.from('chat_sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', sessionId);
+      }
+    } catch (err) {
+      setIsGeneratingImage(false);
+      setError(err instanceof Error ? err.message : 'Image generation failed');
+    }
+  };
+
+  const isEmptyState = messages.length === 0 && !isStreaming && !isGeneratingImage;
   const contentMarginLeft = sidebarCollapsed ? 'calc(56px + 2rem)' : 'calc(288px + 2rem)';
 
   return (
@@ -143,10 +233,11 @@ export default function Chat() {
               messages={messages}
               streamingContent={streamingContent}
               isStreaming={isStreaming}
+              isGeneratingImage={isGeneratingImage}
               error={error}
               onDismissError={() => setError(null)}
             />
-            <InputBar onSend={handleSend} disabled={isStreaming} />
+            <InputBar onSend={handleSend} disabled={isStreaming || isGeneratingImage} />
           </>
         )}
       </main>
