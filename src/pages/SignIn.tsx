@@ -1,10 +1,16 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Sparkles } from 'lucide-react';
 import { glassStyles } from '@/styles/glass';
 import StaticGrid from '@/components/StaticGrid';
 
 export default function SignIn() {
   const { signInWithGoogle } = useAuth();
+  const [showLeft, setShowLeft] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => setShowLeft((prev) => !prev), 500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
@@ -14,8 +20,12 @@ export default function SignIn() {
         style={glassStyles}
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl liquid-glass-panel flex items-center justify-center" style={glassStyles}>
-            <Sparkles size={30} className="text-primary" />
+          <div className="w-16 h-16 rounded-2xl liquid-glass-panel flex items-center justify-center overflow-hidden" style={glassStyles}>
+            <img
+              src={showLeft ? '/iconL.svg' : '/iconR.svg'}
+              alt="Knowhere logo"
+              className="w-10 h-10 object-contain"
+            />
           </div>
           <div>
             <h1
