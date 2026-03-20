@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { supabase, type Message } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
@@ -8,6 +8,7 @@ import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useAuth } from '@/hooks/useAuth';
 import { glassStyles } from '@/styles/glass';
+import { Menu } from 'lucide-react';
 
 // time-aware greetings
 function getGreeting(name: string): { before: string; name: string; after: string } {
@@ -79,16 +80,29 @@ export default function Chat() {
     activeChatSessionId, setActiveChatSessionId, loadMessages, sendMessage, clearChat, setError, addMessage,
   } = useChat();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { user } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+  // detect mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // on mobile, sidebar is always hidden (overlay mode)
 
   const handleSelectSession = useCallback(async (id: number) => {
     await loadMessages(id);
-  }, [loadMessages]);
+    if (isMobile) setSidebarCollapsed(true); // close sidebar on mobile after selecting
+  }, [loadMessages, isMobile]);
 
   const handleNewChat = useCallback(() => {
     clearChat();
-  }, [clearChat]);
+    if (isMobile) setSidebarCollapsed(true);
+  }, [clearChat, isMobile]);
 
   const handleDeleteSession = useCallback(async (id: number) => {
     await removeSession(id);
@@ -199,26 +213,62 @@ export default function Chat() {
   };
 
   const isEmptyState = messages.length === 0 && !isStreaming && !isGeneratingImage;
-  const contentMarginLeft = sidebarCollapsed ? 'calc(56px + 2rem)' : 'calc(288px + 2rem)';
+  const contentMarginLeft = isMobile ? '0' : (sidebarCollapsed ? 'calc(56px + 2rem)' : 'calc(288px + 2rem)');
 
   return (
     <div className="h-screen overflow-hidden relative">
       <StaticGrid />
+
+      {/* mobile backdrop */}
+      {isMobile && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+          style={{
+            opacity: sidebarCollapsed ? 0 : 1,
+            pointerEvents: sidebarCollapsed ? 'none' : 'auto',
+          }}
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
+      {/* sidebar */}
       <Sidebar
         sessions={sessions}
         activeSessionId={activeChatSessionId}
-        isCollapsed={sidebarCollapsed}
+        isCollapsed={isMobile ? false : sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
         onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
         onToggleStar={handleToggleStar}
+        isMobile={isMobile}
+        mobileHidden={isMobile && sidebarCollapsed}
       />
+
+      {/* mobile top bar */}
+      {isMobile && (
+        <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3">
+          <button
+            onClick={() => setSidebarCollapsed(prev => !prev)}
+            className="w-10 h-10 rounded-xl flex items-center justify-center liquid-glass-panel text-foreground/60 hover:text-foreground transition-colors"
+            style={glassStyles}
+          >
+            <Menu size={20} />
+          </button>
+          {user?.user_metadata?.avatar_url ? (
+            <img src={user.user_metadata.avatar_url} alt="" className="w-9 h-9 rounded-full border border-white/10" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-sm font-bold text-foreground">
+              {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() || '?'}
+            </div>
+          )}
+        </div>
+      )}
 
       <main
         className="h-full flex flex-col transition-all duration-200 ease-out"
-        style={{ marginLeft: contentMarginLeft }}
+        style={{ marginLeft: contentMarginLeft, paddingTop: isMobile ? '56px' : '0' }}
       >
         {isEmptyState ? (
           <EmptyState
@@ -272,7 +322,7 @@ function EmptyState({
 
         <InputBar onSend={onSend} disabled={isStreaming} />
 
-        <div className="flex flex-wrap gap-2 justify-center mt-4">
+        <div className="flex flex-wrap gap-2 justify-center mt-4 max-md:hidden">
           {suggestions.map(s => (
             <button
               key={s}

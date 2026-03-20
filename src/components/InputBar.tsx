@@ -57,11 +57,10 @@ export default function InputBar({ onSend, disabled }: InputBarProps) {
           <button
             onClick={toggleImageMode}
             disabled={disabled}
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-              imageMode
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${imageMode
                 ? 'bg-[var(--brand-red)] text-white'
                 : 'text-foreground/30 hover:text-primary hover:bg-white/8'
-            } disabled:opacity-20`}
+              } disabled:opacity-20`}
             aria-label={imageMode ? 'Exit image mode' : 'Image mode'}
             title={imageMode ? 'Exit image mode' : 'Generate image'}
           >
@@ -80,11 +79,10 @@ export default function InputBar({ onSend, disabled }: InputBarProps) {
           <button
             onClick={handleSend}
             disabled={disabled || !input.trim()}
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
-              imageMode
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${imageMode
                 ? 'bg-[var(--brand-red)] text-white disabled:opacity-30'
                 : 'bg-foreground text-background disabled:opacity-20'
-            } disabled:cursor-not-allowed hover:opacity-80`}
+              } disabled:cursor-not-allowed hover:opacity-80`}
             aria-label={imageMode ? 'Generate image' : 'Send message'}
           >
             {imageMode ? (
@@ -97,7 +95,7 @@ export default function InputBar({ onSend, disabled }: InputBarProps) {
         <p className="text-[10px] text-foreground/20 text-center mt-2 font-body">
           {imageMode
             ? 'Image mode — powered by FLUX.1'
-            : 'Knowhere can make mistakes. Verify important information.'}
+            : 'Knowhere can make mistakes.'}
         </p>
       </div>
     </div>

@@ -14,6 +14,8 @@ interface SidebarProps {
   onDeleteSession: (id: number) => void;
   onRenameSession: (id: number, title: string) => void;
   onToggleStar: (id: number) => void;
+  isMobile?: boolean;
+  mobileHidden?: boolean;
 }
 
 export default function Sidebar({
@@ -26,6 +28,8 @@ export default function Sidebar({
   onDeleteSession,
   onRenameSession,
   onToggleStar,
+  isMobile,
+  mobileHidden,
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
@@ -100,8 +104,13 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`fixed top-4 left-4 bottom-4 z-50 rounded-2xl liquid-glass-panel flex flex-col overflow-hidden transition-all duration-200 ease-out ${isCollapsed ? 'w-[56px]' : 'w-72'}`}
-        style={glassStyles}
+        className={`fixed top-4 bottom-4 z-50 rounded-2xl liquid-glass-panel flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+          isMobile ? 'left-4 right-4' : `left-4 ${isCollapsed ? 'w-[56px]' : 'w-72'}`
+        }`}
+        style={{
+          ...glassStyles,
+          transform: mobileHidden ? 'translateX(calc(-100% - 2rem))' : 'translateX(0)',
+        }}
       >
         {isCollapsed ? (
           <div className="flex flex-col items-center h-full py-3 gap-1">
