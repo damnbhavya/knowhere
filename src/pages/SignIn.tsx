@@ -1,16 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { glassStyles } from '@/styles/glass';
 import StaticGrid from '@/components/StaticGrid';
 
 export default function SignIn() {
   const { signInWithGoogle } = useAuth();
-  const [showLeft, setShowLeft] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => setShowLeft((prev) => !prev), 500);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
@@ -20,11 +13,11 @@ export default function SignIn() {
         style={glassStyles}
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl liquid-glass-panel flex items-center justify-center overflow-hidden" style={glassStyles}>
+          <div className="w-25 h-25 rounded-2xl liquid-glass-panel flex items-center justify-center overflow-hidden" style={glassStyles}>
             <img
-              src={showLeft ? '/iconL.svg' : '/iconR.svg'}
+              src="/favicon.svg"
               alt="Knowhere logo"
-              className="w-10 h-10 object-contain"
+              className="mt-1 w-15 h-15 object-contain"
             />
           </div>
           <div>
@@ -35,7 +28,7 @@ export default function SignIn() {
               Know<span className="transition-colors duration-200 hover:text-[var(--brand-red)]">here</span>
             </h1>
             <p className="text-sm text-foreground/60 mt-1.5 font-body">
-              A smart AI chatbot that can help with anything.
+              A conversational AI system for text and image creation
             </p>
           </div>
         </div>
